@@ -22,6 +22,7 @@
 
 .codeTabs {
   display: flex;
+  align-items: center;
   background: rgba(0, 0, 0, 0.55);
   border-bottom: 1px solid rgba(255, 255, 255, 0.10);
 }
@@ -44,6 +45,26 @@
 .codeTabActive {
   color: rgba(255, 255, 255, 0.9);
   background: rgba(255, 255, 255, 0.08);
+}
+
+.codeCopyBtn {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-family: 'Courier New', Courier, monospace;
+  color: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.10);
+  border: none;
+  border-left: 1px solid rgba(255, 255, 255, 0.10);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+
+  &:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.18);
+  }
 }
 
 .codePanel {

@@ -17,6 +17,7 @@ export interface PresetControlsProps {
 export const PresetControls = ({ controls, controlsAPI, lang }: PresetControlsProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [copied, setCopied] = useState(false);
+  const [codeCopied, setCodeCopied] = useState(false);
   const [showCode, setShowCode] = useState(true);
   const [codeTab, setCodeTab] = useState<'css' | 'json'>('css');
 
@@ -25,6 +26,16 @@ export const PresetControls = ({ controls, controlsAPI, lang }: PresetControlsPr
     if (codeTab === 'css') return generateCSSCode(controls);
     return JSON.stringify({ version: '1.0.0', controls }, null, 2);
   }, [showCode, codeTab, controls]);
+
+  const handleCodeCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(codeContent);
+      setCodeCopied(true);
+      setTimeout(() => setCodeCopied(false), 2000);
+    } catch {
+      alert(lang['editor.copyFailedMessage']);
+    }
+  };
 
   const handleCopy = async () => {
     try {
@@ -122,6 +133,14 @@ export const PresetControls = ({ controls, controlsAPI, lang }: PresetControlsPr
               onClick={() => setCodeTab('json')}
             >
               {lang['editor.codeTabJSON']}
+            </button>
+            <button
+              className={styles.codeCopyBtn}
+              onClick={handleCodeCopy}
+              title={lang['editor.copyCode']}
+            >
+              <ContentCopyOutlinedIcon style={{ fontSize: '11px', marginRight: '4px' }} />
+              {codeCopied ? lang['editor.copySuccessMessage'] : lang['editor.copyCode']}
             </button>
           </div>
           <textarea

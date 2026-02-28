@@ -45,6 +45,7 @@ export default {
     'editor.showCode': '查看代码',
     'editor.codeTabCSS': 'CSS',
     'editor.codeTabJSON': 'JSON',
+    'editor.copyCode': '复制代码',
     'editor.importSuccessMessage': '预设导入成功！',
     'editor.importFailedMessage': (message: string) => `导入失败：${message}`,
   },
@@ -94,6 +95,7 @@ export default {
     'editor.showCode': 'Show Code',
     'editor.codeTabCSS': 'CSS',
     'editor.codeTabJSON': 'JSON',
+    'editor.copyCode': 'Copy Code',
     'editor.importSuccessMessage': 'Preset imported successfully!',
     'editor.importFailedMessage': (message: string) => `Import failed: ${message}`,
   },
@@ -143,6 +145,7 @@ export default {
     "editor.showCode": "Kodni ko'rish",
     "editor.codeTabCSS": "CSS",
     "editor.codeTabJSON": "JSON",
+    "editor.copyCode": "Kodni nusxalash",
     "editor.importSuccessMessage": "Preset muvaffaqiyatli import qilindi!",
     "editor.importFailedMessage": (message: string) => `Import failed: ${message}`,
   }
