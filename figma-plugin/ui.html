@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #1a1a1a;
+      --panel: #242424;
+      --border: #333;
+      --text: #e0e0e0;
+      --accent: #4f94ff;
+      --btn-primary-bg: #4f94ff;
+      --btn-primary-color: #fff;
+      --btn-secondary-bg: #333;
+      --btn-secondary-color: #ccc;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 12px;
+      background: var(--bg);
+      color: var(--text);
+      width: 480px;
+      overflow-x: hidden;
+    }
+    #preview-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #111;
+      border-bottom: 1px solid var(--border);
+      padding: 10px;
+      height: 210px;
+    }
+    #preview-canvas {
+      max-width: 460px;
+      max-height: 190px;
+      image-rendering: pixelated;
+      border-radius: 6px;
+      cursor: crosshair;
+    }
+    #controls {
+      padding: 10px 14px;
+      overflow-y: auto;
+      height: 388px;
+    }
+    .section { margin-bottom: 10px; }
+    .section-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #777;
+      margin-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 3px;
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+      gap: 6px;
+    }
+    .row label {
+      width: 116px;
+      flex-shrink: 0;
+      font-size: 11px;
+      color: #aaa;
+    }
+    .row input[type="range"] {
+      flex: 1;
+      height: 4px;
+      -webkit-appearance: none;
+      background: #444;
+      border-radius: 2px;
+      outline: none;
+    }
+    .row input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px;
+      height: 12px;
+      background: var(--accent);
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    .val {
+      width: 38px;
+      text-align: right;
+      font-size: 11px;
+      color: #ccc;
+      font-variant-numeric: tabular-nums;
+      flex-shrink: 0;
+    }
+    .row input[type="checkbox"] {
+      width: 14px;
+      height: 14px;
+      cursor: pointer;
+      accent-color: var(--accent);
+    }
+    .row input[type="color"] {
+      width: 28px;
+      height: 22px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px;
+      background: var(--panel);
+      cursor: pointer;
+    }
+    .bg-options {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    .bg-opt {
+      width: 34px;
+      height: 34px;
+      border-radius: 5px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      overflow: hidden;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .bg-opt.active { border-color: var(--accent); }
+    .bg-opt-inner {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      background: #333;
+    }
+    #actions {
+      display: flex;
+      gap: 8px;
+      padding: 8px 14px;
+      border-top: 1px solid var(--border);
+    }
+    .btn {
+      flex: 1;
+      padding: 8px 10px;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn:active { opacity: 0.7; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-primary { background: var(--btn-primary-bg); color: var(--btn-primary-color); }
+    .btn-secondary { background: var(--btn-secondary-bg); color: var(--btn-secondary-color); }
+    #status {
+      font-size: 11px;
+      color: #aaa;
+      text-align: center;
+      padding: 3px 14px;
+      min-height: 18px;
+    }
+    .upload-input { display: none; }
+  </style>
+</head>
+<body>
+
+<div id="preview-wrap">
+  <canvas id="preview-canvas"></canvas>
+</div>
+
+<div id="controls">
+
+  <div class="section">
+    <div class="section-title">Export Size</div>
+    <div class="row">
+      <label>Width (px)</label>
+      <input type="range" id="exportWidth" min="100" max="1000" step="10" value="400" />
+      <span class="val" id="exportWidthVal">400</span>
+    </div>
+    <div class="row">
+      <label>Height (px)</label>
+      <input type="range" id="exportHeight" min="100" max="1000" step="10" value="400" />
+      <span class="val" id="exportHeightVal">400</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Shape</div>
+    <div class="row">
+      <label>Width</label>
+      <input type="range" id="shapeWidth" min="20" max="800" step="1" value="200" />
+      <span class="val" id="shapeWidthVal">200</span>
+    </div>
+    <div class="row">
+      <label>Height</label>
+      <input type="range" id="shapeHeight" min="20" max="800" step="1" value="200" />
+      <span class="val" id="shapeHeightVal">200</span>
+    </div>
+    <div class="row">
+      <label>Corner Radius %</label>
+      <input type="range" id="shapeRadius" min="1" max="100" step="0.1" value="80" />
+      <span class="val" id="shapeRadiusVal">80</span>
+    </div>
+    <div class="row">
+      <label>Roundness</label>
+      <input type="range" id="shapeRoundness" min="2" max="7" step="0.01" value="5" />
+      <span class="val" id="shapeRoundnessVal">5</span>
+    </div>
+    <div class="row">
+      <label>Merge Rate</label>
+      <input type="range" id="mergeRate" min="0" max="0.3" step="0.001" value="0.05" />
+      <span class="val" id="mergeRateVal">0.05</span>
+    </div>
+    <div class="row">
+      <label>Show Blob</label>
+      <input type="checkbox" id="showShape1" checked />
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Background</div>
+    <div class="bg-options" id="bgOptions"></div>
+    <input type="file" class="upload-input" id="bgUpload" accept="image/*" />
+    <div class="row">
+      <label>Blur Radius</label>
+      <input type="range" id="blurRadius" min="1" max="60" step="1" value="10" />
+      <span class="val" id="blurRadiusVal">10</span>
+    </div>
+    <div class="row">
+      <label>Blur Edge</label>
+      <input type="checkbox" id="blurEdge" checked />
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Refraction</div>
+    <div class="row">
+      <label>Thickness</label>
+      <input type="range" id="refThickness" min="1" max="80" step="0.1" value="20" />
+      <span class="val" id="refThicknessVal">20</span>
+    </div>
+    <div class="row">
+      <label>Factor</label>
+      <input type="range" id="refFactor" min="1" max="4" step="0.01" value="1.4" />
+      <span class="val" id="refFactorVal">1.4</span>
+    </div>
+    <div class="row">
+      <label>Dispersion</label>
+      <input type="range" id="refDispersion" min="0" max="50" step="0.1" value="7" />
+      <span class="val" id="refDispersionVal">7</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Fresnel</div>
+    <div class="row">
+      <label>Range</label>
+      <input type="range" id="refFresnelRange" min="0" max="100" step="0.1" value="30" />
+      <span class="val" id="refFresnelRangeVal">30</span>
+    </div>
+    <div class="row">
+      <label>Hardness</label>
+      <input type="range" id="refFresnelHardness" min="0" max="100" step="0.1" value="20" />
+      <span class="val" id="refFresnelHardnessVal">20</span>
+    </div>
+    <div class="row">
+      <label>Factor</label>
+      <input type="range" id="refFresnelFactor" min="0" max="100" step="0.1" value="20" />
+      <span class="val" id="refFresnelFactorVal">20</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Glare</div>
+    <div class="row">
+      <label>Range</label>
+      <input type="range" id="glareRange" min="0" max="100" step="0.1" value="30" />
+      <span class="val" id="glareRangeVal">30</span>
+    </div>
+    <div class="row">
+      <label>Hardness</label>
+      <input type="range" id="glareHardness" min="0" max="100" step="0.1" value="20" />
+      <span class="val" id="glareHardnessVal">20</span>
+    </div>
+    <div class="row">
+      <label>Factor</label>
+      <input type="range" id="glareFactor" min="0" max="120" step="0.1" value="90" />
+      <span class="val" id="glareFactorVal">90</span>
+    </div>
+    <div class="row">
+      <label>Convergence</label>
+      <input type="range" id="glareConvergence" min="0" max="100" step="0.1" value="50" />
+      <span class="val" id="glareConvergenceVal">50</span>
+    </div>
+    <div class="row">
+      <label>Opposite Factor</label>
+      <input type="range" id="glareOppositeFactor" min="0" max="100" step="0.1" value="80" />
+      <span class="val" id="glareOppositeFactorVal">80</span>
+    </div>
+    <div class="row">
+      <label>Angle (°)</label>
+      <input type="range" id="glareAngle" min="-180" max="180" step="1" value="-45" />
+      <span class="val" id="glareAngleVal">-45</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Tint</div>
+    <div class="row">
+      <label>Color</label>
+      <input type="color" id="tintColor" value="#ffffff" />
+      <label style="width:auto;margin-left:4px;">Alpha</label>
+      <input type="range" id="tintAlpha" min="0" max="1" step="0.01" value="0" />
+      <span class="val" id="tintAlphaVal">0</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Shadow</div>
+    <div class="row">
+      <label>Expand</label>
+      <input type="range" id="shadowExpand" min="2" max="100" step="0.1" value="25" />
+      <span class="val" id="shadowExpandVal">25</span>
+    </div>
+    <div class="row">
+      <label>Factor</label>
+      <input type="range" id="shadowFactor" min="0" max="100" step="0.1" value="15" />
+      <span class="val" id="shadowFactorVal">15</span>
+    </div>
+    <div class="row">
+      <label>Offset X</label>
+      <input type="range" id="shadowX" min="-20" max="20" step="0.1" value="0" />
+      <span class="val" id="shadowXVal">0</span>
+    </div>
+    <div class="row">
+      <label>Offset Y</label>
+      <input type="range" id="shadowY" min="-20" max="20" step="0.1" value="-10" />
+      <span class="val" id="shadowYVal">-10</span>
+    </div>
+  </div>
+
+</div>
+
+<div id="status"></div>
+<div id="actions">
+  <button class="btn btn-secondary" id="insertBtn">Insert New Layer</button>
+  <button class="btn btn-primary" id="applyBtn">Apply to Selection</button>
+</div>
+
+<script>
+'use strict';
+
+// ─── Shader Sources (ported from src/shaders/) ────────────────────────────────
+
+const VERTEX_SHADER = `#version 300 es
+in vec4 a_position;
+out vec2 v_uv;
+void main() {
+  v_uv = (a_position.xy + 1.0) * 0.5;
+  gl_Position = a_position;
+}`;
+
+const FRAGMENT_BG_SHADER = `#version 300 es
+precision highp float;
+in vec2 v_uv;
+out vec4 fragColor;
+uniform vec2 u_resolution;
+uniform float u_dpr;
+uniform vec2 u_mouse;
+uniform vec2 u_mouseSpring;
+uniform float u_mergeRate;
+uniform float u_shapeWidth;
+uniform float u_shapeHeight;
+uniform float u_shapeRadius;
+uniform float u_shapeRoundness;
+uniform float u_shadowExpand;
+uniform float u_shadowFactor;
+uniform vec2 u_shadowPosition;
+uniform int u_bgType;
+uniform sampler2D u_bgTexture;
+uniform float u_bgTextureRatio;
+uniform int u_bgTextureReady;
+uniform int u_showShape1;
+
+float chessboard(vec2 uv, float size, int mode) {
+  float yBars = step(size * 2.0, mod(uv.y * 2.0, size * 4.0));
+  float xBars = step(size * 2.0, mod(uv.x * 2.0, size * 4.0));
+  if (mode == 0) return yBars;
+  else if (mode == 1) return xBars;
+  else return abs(yBars - xBars);
+}
+
+float halfColor(vec2 uv) { return uv.y > 0.5 ? 1.0 : 0.0; }
+
+float sdCircle(vec2 p, float r) { return length(p) - r; }
+
+float superellipseCornerSDF(vec2 p, float r, float n) {
+  p = abs(p);
+  float v = pow(pow(p.x, n) + pow(p.y, n), 1.0 / n);
+  return v - r;
+}
+
+float roundedRectSDF(vec2 p, vec2 center, float width, float height, float cornerRadius, float n) {
+  p -= center;
+  float cr = cornerRadius * u_dpr;
+  vec2 d = abs(p) - vec2(width * u_dpr, height * u_dpr) * 0.5;
+  float dist;
+  if (d.x > -cr && d.y > -cr) {
+    vec2 cornerCenter = sign(p) * (vec2(width * u_dpr, height * u_dpr) * 0.5 - vec2(cr));
+    vec2 cornerP = p - cornerCenter;
+    dist = superellipseCornerSDF(cornerP, cr, n);
+  } else {
+    dist = min(max(d.x, d.y), 0.0) + length(max(d, 0.0));
+  }
+  return dist;
+}
+
+float smin(float a, float b, float k) {
+  float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
+  return mix(b, a, h) - k * h * (1.0 - h);
+}
+
+float mainSDF(vec2 p1, vec2 p2, vec2 p) {
+  vec2 p1n = p1 + p / u_resolution.y;
+  vec2 p2n = p2 + p / u_resolution.y;
+  float d1 = u_showShape1 == 1 ? sdCircle(p1n, 100.0 * u_dpr / u_resolution.y) : 1.0;
+  float d2 = roundedRectSDF(p2n, vec2(0.0),
+    u_shapeWidth / u_resolution.y, u_shapeHeight / u_resolution.y,
+    u_shapeRadius / u_resolution.y, u_shapeRoundness);
+  return smin(d1, d2, u_mergeRate);
+}
+
+vec2 getCoverUV(vec2 uv, float canvasAspect, float textureAspect) {
+  if (canvasAspect > textureAspect) {
+    float scale = textureAspect / canvasAspect;
+    uv.y = uv.y * scale + 0.5 - 0.5 * scale;
+  } else {
+    float scale = canvasAspect / textureAspect;
+    uv.x = uv.x * scale + 0.5 - 0.5 * scale;
+  }
+  return uv;
+}
+
+void main() {
+  vec2 u_resolution1x = u_resolution.xy / u_dpr;
+  vec3 bgColor = vec3(1.0);
+
+  if (u_bgType <= 0) {
+    bgColor = vec3(1.0 - chessboard(gl_FragCoord.xy / u_dpr, 20.0, 2) / 4.0);
+  } else if (u_bgType <= 1) {
+    if (v_uv.x < 0.5 && v_uv.y > 0.5)
+      bgColor = vec3(chessboard(gl_FragCoord.xy / u_dpr, 10.0, 0));
+    else if (v_uv.x > 0.5 && v_uv.y < 0.5)
+      bgColor = vec3(chessboard(gl_FragCoord.xy / u_dpr, 10.0, 1));
+    else if (v_uv.x < 0.5 && v_uv.y < 0.5)
+      bgColor = vec3(0.0);
+  } else if (u_bgType <= 2) {
+    bgColor = vec3(halfColor(gl_FragCoord.xy / u_resolution) * 0.6 + 0.3);
+  } else if (u_bgType <= 11) {
+    if (u_bgTextureReady != 1) {
+      bgColor = vec3(1.0 - chessboard(gl_FragCoord.xy / u_dpr, 20.0, 2) / 4.0);
+    } else {
+      vec2 uv = getCoverUV(v_uv, u_resolution.x / u_resolution.y, u_bgTextureRatio);
+      bgColor = texture(u_bgTexture, uv).rgb;
+    }
+  }
+
+  vec2 p1 = (vec2(0.0) - u_resolution.xy * 0.5
+    + vec2(u_shadowPosition.x * u_dpr, u_shadowPosition.y * u_dpr)) / u_resolution.y;
+  vec2 p2 = (vec2(0.0) - u_mouseSpring
+    + vec2(u_shadowPosition.x * u_dpr, u_shadowPosition.y * u_dpr)) / u_resolution.y;
+  float merged = mainSDF(p1, p2, gl_FragCoord.xy);
+  float shadow = exp(-1.0 / u_shadowExpand * abs(merged) * u_resolution1x.y) * 0.6 * u_shadowFactor;
+
+  fragColor = vec4(bgColor - vec3(shadow), 1.0);
+}`;
+
+const FRAGMENT_VBLUR_SHADER = `#version 300 es
+precision highp float;
+#define MAX_BLUR_RADIUS (200)
+in vec2 v_uv;
+uniform sampler2D u_prevPassTexture;
+uniform vec2 u_resolution;
+uniform int u_blurRadius;
+uniform float u_blurWeights[MAX_BLUR_RADIUS + 1];
+out vec4 fragColor;
+void main() {
+  vec2 texelSize = 1.0 / u_resolution;
+  vec4 color = texture(u_prevPassTexture, v_uv) * u_blurWeights[0];
+  for (int i = 1; i <= u_blurRadius; ++i) {
+    float w = u_blurWeights[i];
+    vec2 offset = vec2(float(i)) * texelSize;
+    color += texture(u_prevPassTexture, v_uv + vec2(offset.x, 0.0)) * w;
+    color += texture(u_prevPassTexture, v_uv - vec2(offset.x, 0.0)) * w;
+  }
+  fragColor = color;
+}`;
+
+const FRAGMENT_HBLUR_SHADER = `#version 300 es
+precision highp float;
+#define MAX_BLUR_RADIUS (200)
+in vec2 v_uv;
+uniform sampler2D u_prevPassTexture;
+uniform vec2 u_resolution;
+uniform int u_blurRadius;
+uniform float u_blurWeights[MAX_BLUR_RADIUS + 1];
+out vec4 fragColor;
+void main() {
+  vec2 texelSize = 1.0 / u_resolution;
+  vec4 color = texture(u_prevPassTexture, v_uv) * u_blurWeights[0];
+  for (int i = 1; i <= u_blurRadius; ++i) {
+    float w = u_blurWeights[i];
+    vec2 offset = vec2(float(i)) * texelSize;
+    color += texture(u_prevPassTexture, v_uv + vec2(0.0, offset.y)) * w;
+    color += texture(u_prevPassTexture, v_uv - vec2(0.0, offset.y)) * w;
+  }
+  fragColor = color;
+}`;
+
+const FRAGMENT_MAIN_SHADER = `#version 300 es
+precision highp float;
+#define PI (3.14159265359)
+const float N_R = 1.0 - 0.02;
+const float N_G = 1.0;
+const float N_B = 1.0 + 0.02;
+in vec2 v_uv;
+uniform sampler2D u_blurredBg;
+uniform sampler2D u_bg;
+uniform vec2 u_resolution;
+uniform float u_dpr;
+uniform vec2 u_mouse;
+uniform vec2 u_mouseSpring;
+uniform float u_mergeRate;
+uniform float u_shapeWidth;
+uniform float u_shapeHeight;
+uniform float u_shapeRadius;
+uniform float u_shapeRoundness;
+uniform vec4 u_tint;
+uniform float u_refThickness;
+uniform float u_refFactor;
+uniform float u_refDispersion;
+uniform float u_refFresnelRange;
+uniform float u_refFresnelFactor;
+uniform float u_refFresnelHardness;
+uniform float u_glareRange;
+uniform float u_glareConvergence;
+uniform float u_glareOppositeFactor;
+uniform float u_glareFactor;
+uniform float u_glareHardness;
+uniform float u_glareAngle;
+uniform int u_blurEdge;
+uniform int u_showShape1;
+uniform int STEP;
+out vec4 fragColor;
+
+float sdCircle(vec2 p, float r) { return length(p) - r; }
+
+float superellipseCornerSDF(vec2 p, float r, float n) {
+  p = abs(p);
+  float v = pow(pow(p.x, n) + pow(p.y, n), 1.0 / n);
+  return v - r;
+}
+
+float roundedRectSDF(vec2 p, vec2 center, float width, float height, float cornerRadius, float n) {
+  p -= center;
+  float cr = cornerRadius * u_dpr;
+  vec2 d = abs(p) - vec2(width * u_dpr, height * u_dpr) * 0.5;
+  float dist;
+  if (d.x > -cr && d.y > -cr) {
+    vec2 cornerCenter = sign(p) * (vec2(width * u_dpr, height * u_dpr) * 0.5 - vec2(cr));
+    vec2 cornerP = p - cornerCenter;
+    dist = superellipseCornerSDF(cornerP, cr, n);
+  } else {
+    dist = min(max(d.x, d.y), 0.0) + length(max(d, 0.0));
+  }
+  return dist;
+}
+
+float smin(float a, float b, float k) {
+  float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
+  return mix(b, a, h) - k * h * (1.0 - h);
+}
+
+float mainSDF(vec2 p1, vec2 p2, vec2 p) {
+  vec2 p1n = p1 + p / u_resolution.y;
+  vec2 p2n = p2 + p / u_resolution.y;
+  float d1 = u_showShape1 == 1 ? sdCircle(p1n, 100.0 * u_dpr / u_resolution.y) : 1.0;
+  float d2 = roundedRectSDF(p2n, vec2(0.0),
+    u_shapeWidth / u_resolution.y, u_shapeHeight / u_resolution.y,
+    u_shapeRadius / u_resolution.y, u_shapeRoundness);
+  return smin(d1, d2, u_mergeRate);
+}
+
+vec2 getNormal(vec2 p1, vec2 p2, vec2 p) {
+  vec2 h = vec2(max(abs(dFdx(p.x)), 0.0001), max(abs(dFdy(p.y)), 0.0001));
+  vec2 grad = vec2(
+    mainSDF(p1, p2, p + vec2(h.x, 0.0)) - mainSDF(p1, p2, p - vec2(h.x, 0.0)),
+    mainSDF(p1, p2, p + vec2(0.0, h.y)) - mainSDF(p1, p2, p - vec2(0.0, h.y))
+  ) / (2.0 * h);
+  return grad * 1.414213562 * 1000.0;
+}
+
+// Color space helpers
+const vec3 D65_WHITE = vec3(0.95045592705, 1.0, 1.08905775076);
+vec3 WHITE = D65_WHITE;
+const mat3 RGB_TO_XYZ_M = mat3(0.4124,0.3576,0.1805,0.2126,0.7152,0.0722,0.0193,0.1192,0.9505);
+const mat3 XYZ_TO_XYZ50_M = mat3(1.0479298208405488,0.022946793341019088,-0.05019222954313557,0.029627815688159344,0.990434484573249,-0.01707382502938514,-0.009243058152591178,0.015055144896577895,0.7518742899580008);
+const mat3 XYZ_TO_RGB_M = mat3(3.2406255,-1.537208,-0.4986286,-0.9689307,1.8757561,0.0415175,0.0557101,-0.2040211,1.0569959);
+const mat3 XYZ50_TO_XYZ_M = mat3(0.9554734527042182,-0.023098536874261423,0.0632593086610217,-0.028369706963208136,1.0099954580058226,0.021041398966943008,0.012314001688319899,-0.020507696433477912,1.3303659366080753);
+float UNCOMPAND_SRGB(float a) { return a > 0.04045 ? pow((a+0.055)/1.055,2.4) : a/12.92; }
+float COMPAND_RGB(float a) { return a <= 0.0031308 ? 12.92*a : 1.055*pow(a,0.41666666666)-0.055; }
+vec3 RGB_TO_XYZ(vec3 rgb) { return WHITE == D65_WHITE ? rgb*RGB_TO_XYZ_M : rgb*RGB_TO_XYZ_M*XYZ_TO_XYZ50_M; }
+vec3 SRGB_TO_RGB(vec3 srgb) { return vec3(UNCOMPAND_SRGB(srgb.x),UNCOMPAND_SRGB(srgb.y),UNCOMPAND_SRGB(srgb.z)); }
+vec3 RGB_TO_SRGB(vec3 rgb) { return vec3(COMPAND_RGB(rgb.x),COMPAND_RGB(rgb.y),COMPAND_RGB(rgb.z)); }
+vec3 SRGB_TO_XYZ(vec3 srgb) { return RGB_TO_XYZ(SRGB_TO_RGB(srgb)); }
+float XYZ_TO_LAB_F(float x) { return x > 0.00885645167 ? pow(x,0.333333333) : 7.78703703704*x+0.13793103448; }
+vec3 XYZ_TO_LAB(vec3 xyz) {
+  vec3 s = xyz/WHITE;
+  s = vec3(XYZ_TO_LAB_F(s.x),XYZ_TO_LAB_F(s.y),XYZ_TO_LAB_F(s.z));
+  return vec3(116.0*s.y-16.0, 500.0*(s.x-s.y), 200.0*(s.y-s.z));
+}
+vec3 SRGB_TO_LAB(vec3 srgb) { return XYZ_TO_LAB(SRGB_TO_XYZ(srgb)); }
+vec3 LAB_TO_LCH(vec3 Lab) { return vec3(Lab.x, sqrt(dot(Lab.yz,Lab.yz)), atan(Lab.z,Lab.y)*57.2957795131); }
+vec3 SRGB_TO_LCH(vec3 srgb) { return LAB_TO_LCH(SRGB_TO_LAB(srgb)); }
+vec3 XYZ_TO_RGB(vec3 xyz) { return WHITE == D65_WHITE ? xyz*XYZ_TO_RGB_M : xyz*XYZ50_TO_XYZ_M*XYZ_TO_RGB_M; }
+vec3 XYZ_TO_SRGB(vec3 xyz) { return RGB_TO_SRGB(XYZ_TO_RGB(xyz)); }
+float LAB_TO_XYZ_F(float x) { return x > 0.206897 ? x*x*x : 0.12841854934*(x-0.137931034); }
+vec3 LAB_TO_XYZ(vec3 Lab) {
+  float w = (Lab.x+16.0)/116.0;
+  return WHITE*vec3(LAB_TO_XYZ_F(w+Lab.y/500.0),LAB_TO_XYZ_F(w),LAB_TO_XYZ_F(w-Lab.z/200.0));
+}
+vec3 LAB_TO_SRGB(vec3 lab) { return XYZ_TO_SRGB(LAB_TO_XYZ(lab)); }
+vec3 LCH_TO_LAB(vec3 LCh) { return vec3(LCh.x, LCh.y*cos(LCh.z*0.01745329251), LCh.y*sin(LCh.z*0.01745329251)); }
+vec3 LCH_TO_SRGB(vec3 lch) { return LAB_TO_SRGB(LCH_TO_LAB(lch)); }
+
+float vec2ToAngle(vec2 v) { float a = atan(v.y,v.x); if (a < 0.0) a += 2.0*PI; return a; }
+
+vec4 getTextureDispersion(sampler2D tex1, sampler2D tex2, float mixRate, vec2 offset, float factor) {
+  vec4 pixel = vec4(1.0);
+  float bgR = texture(tex1, v_uv + offset*(1.0-(N_R-1.0)*factor)).r;
+  float bgG = texture(tex1, v_uv + offset*(1.0-(N_G-1.0)*factor)).g;
+  float bgB = texture(tex1, v_uv + offset*(1.0-(N_B-1.0)*factor)).b;
+  float blurR = texture(tex2, v_uv + offset*(1.0-(N_R-1.0)*factor)).r;
+  float blurG = texture(tex2, v_uv + offset*(1.0-(N_G-1.0)*factor)).g;
+  float blurB = texture(tex2, v_uv + offset*(1.0-(N_B-1.0)*factor)).b;
+  pixel.r = mix(bgR, blurR, mixRate);
+  pixel.g = mix(bgG, blurG, mixRate);
+  pixel.b = mix(bgB, blurB, mixRate);
+  return pixel;
+}
+
+void main() {
+  vec2 u_resolution1x = u_resolution.xy / u_dpr;
+  vec2 p1 = (vec2(0.0) - u_resolution.xy * 0.5) / u_resolution.y;
+  vec2 p2 = (vec2(0.0) - u_mouseSpring) / u_resolution.y;
+  float merged = mainSDF(p1, p2, gl_FragCoord.xy);
+  vec4 outColor;
+
+  if (merged < 0.005) {
+    float nmerged = -1.0 * (merged * u_resolution1x.y);
+    float x_R_ratio = 1.0 - nmerged / u_refThickness;
+    float thetaI = asin(pow(x_R_ratio, 2.0));
+    float thetaT = asin(1.0 / u_refFactor * sin(thetaI));
+    float edgeFactor = -1.0 * tan(thetaT - thetaI);
+    if (nmerged >= u_refThickness) edgeFactor = 0.0;
+
+    if (edgeFactor <= 0.0) {
+      outColor = texture(u_blurredBg, v_uv);
+      outColor = mix(outColor, vec4(u_tint.r, u_tint.g, u_tint.b, 1.0), u_tint.a * 0.8);
+    } else {
+      float edgeH = nmerged / u_refThickness;
+      vec2 normal = getNormal(p1, p2, gl_FragCoord.xy);
+      vec4 blurredPixel = getTextureDispersion(
+        u_bg, u_blurredBg,
+        u_blurEdge > 0 ? 1.0 : edgeH,
+        -normal * edgeFactor * 0.05 * u_dpr *
+          vec2(u_resolution.y / (u_resolution1x.x * u_dpr), 1.0),
+        u_refDispersion
+      );
+      outColor = mix(blurredPixel, vec4(u_tint.r, u_tint.g, u_tint.b, 1.0), u_tint.a * 0.8);
+
+      float fresnelFactor = clamp(
+        pow(1.0 + merged * u_resolution1x.y / 1500.0 * pow(500.0/u_refFresnelRange, 2.0) + u_refFresnelHardness, 5.0),
+        0.0, 1.0);
+      vec3 fresnelTintLCH = SRGB_TO_LCH(mix(vec3(1.0), vec3(u_tint.r,u_tint.g,u_tint.b), u_tint.a*0.5));
+      fresnelTintLCH.x += 20.0 * fresnelFactor * u_refFresnelFactor;
+      fresnelTintLCH.x = clamp(fresnelTintLCH.x, 0.0, 100.0);
+      outColor = mix(outColor, vec4(LCH_TO_SRGB(fresnelTintLCH), 1.0), fresnelFactor * u_refFresnelFactor * 0.7 * length(normal));
+
+      float glareGeoFactor = clamp(
+        pow(1.0 + merged * u_resolution1x.y / 1500.0 * pow(500.0/u_glareRange, 2.0) + u_glareHardness, 5.0),
+        0.0, 1.0);
+      float glareAngle = (vec2ToAngle(normalize(normal)) - PI/4.0 + u_glareAngle) * 2.0;
+      int glareFarside = 0;
+      if ((glareAngle > PI*(2.0-0.5) && glareAngle < PI*(4.0-0.5)) || glareAngle < PI*(0.0-0.5))
+        glareFarside = 1;
+      float glareAngleFactor = (0.5+sin(glareAngle)*0.5)*(glareFarside==1?1.2*u_glareOppositeFactor:1.2)*u_glareFactor;
+      glareAngleFactor = clamp(pow(glareAngleFactor, 0.1+u_glareConvergence*2.0), 0.0, 1.0);
+
+      vec3 glareTintLCH = SRGB_TO_LCH(mix(blurredPixel.rgb, vec3(u_tint.r,u_tint.g,u_tint.b), u_tint.a*0.5));
+      glareTintLCH.x += 150.0 * glareAngleFactor * glareGeoFactor;
+      glareTintLCH.y += 30.0 * glareAngleFactor * glareGeoFactor;
+      glareTintLCH.x = clamp(glareTintLCH.x, 0.0, 120.0);
+      outColor = mix(outColor, vec4(LCH_TO_SRGB(glareTintLCH), 1.0), glareAngleFactor * glareGeoFactor * length(normal));
+    }
+  } else {
+    outColor = texture(u_bg, v_uv);
+  }
+
+  outColor = mix(outColor, texture(u_bg, v_uv), smoothstep(-0.001, 0.001, merged));
+  fragColor = outColor;
+}`;
+
+// ─── State ──────────────────────────────────────────────────────────────────
+
+const state = {
+  exportWidth: 400, exportHeight: 400,
+  shapeWidth: 200, shapeHeight: 200,
+  shapeRadius: 80, shapeRoundness: 5, mergeRate: 0.05, showShape1: true,
+  bgType: 0, bgTexture: null, bgTextureRatio: 1, bgTextureReady: false,
+  blurRadius: 10, blurEdge: true,
+  refThickness: 20, refFactor: 1.4, refDispersion: 7,
+  refFresnelRange: 30, refFresnelHardness: 20, refFresnelFactor: 20,
+  glareRange: 30, glareHardness: 20, glareFactor: 90,
+  glareConvergence: 50, glareOppositeFactor: 80, glareAngle: -45,
+  tintR: 1, tintG: 1, tintB: 1, tintA: 0,
+  shadowExpand: 25, shadowFactor: 15, shadowX: 0, shadowY: -10,
+  // mouse position in canvas pixel coords (for preview interactivity)
+  mouseX: 200, mouseY: 200,
+};
+
+// ─── Gaussian kernel ─────────────────────────────────────────────────────────
+
+function computeGaussianKernel(radius) {
+  const sigma = radius / 3.0;
+  const kernel = [];
+  let sum = 0;
+  for (let i = 0; i <= radius; i++) {
+    const w = Math.exp(-0.5 * (i * i) / (sigma * sigma));
+    kernel.push(w);
+    sum += i === 0 ? w : w * 2;
+  }
+  return kernel.map(w => w / sum);
+}
+
+// ─── WebGL Renderer ──────────────────────────────────────────────────────────
+
+const canvas = document.getElementById('preview-canvas');
+let gl, ext;
+let bgProgram, vBlurProgram, hBlurProgram, mainProgram;
+let bgVAO, vBlurVAO, hBlurVAO, mainVAO;
+let bgFBO, vBlurFBO, hBlurFBO;
+
+function createShader(type, src) {
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src);
+  gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+    const info = gl.getShaderInfoLog(s);
+    gl.deleteShader(s);
+    throw new Error('Shader error: ' + info);
+  }
+  return s;
+}
+
+function createProgram(vs, fs) {
+  const p = gl.createProgram();
+  gl.attachShader(p, createShader(gl.VERTEX_SHADER, vs));
+  gl.attachShader(p, createShader(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(p);
+  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) {
+    const info = gl.getProgramInfoLog(p);
+    gl.deleteProgram(p);
+    throw new Error('Program error: ' + info);
+  }
+  return p;
+}
+
+function createFBO(w, h) {
+  const fbo = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+  const tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, w, h, 0, gl.RGBA, gl.FLOAT, null);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  gl.bindTexture(gl.TEXTURE_2D, null);
+  return { fbo, texture: tex };
+}
+
+function resizeFBO(fb, w, h) {
+  gl.bindTexture(gl.TEXTURE_2D, fb.texture);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, w, h, 0, gl.RGBA, gl.FLOAT, null);
+  gl.bindTexture(gl.TEXTURE_2D, null);
+}
+
+function makeVAO(program, vbo) {
+  const vao = gl.createVertexArray();
+  gl.bindVertexArray(vao);
+  gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+  const loc = gl.getAttribLocation(program, 'a_position');
+  gl.enableVertexAttribArray(loc);
+  gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  gl.bindVertexArray(null);
+  return vao;
+}
+
+// Uniform helpers
+function sf(p, n, v)   { const l = gl.getUniformLocation(p,n); if (l!==null) gl.uniform1f(l,v); }
+function si(p, n, v)   { const l = gl.getUniformLocation(p,n); if (l!==null) gl.uniform1i(l,v); }
+function sf2(p, n, x, y)     { const l = gl.getUniformLocation(p,n); if (l!==null) gl.uniform2f(l,x,y); }
+function sf4(p, n, x, y, z, w){ const l = gl.getUniformLocation(p,n); if (l!==null) gl.uniform4f(l,x,y,z,w); }
+function sf1v(p, n, arr) {
+  let l = gl.getUniformLocation(p, n + '[0]');
+  if (l === null) l = gl.getUniformLocation(p, n);
+  if (l !== null) gl.uniform1fv(l, arr);
+}
+
+function initGL() {
+  gl = canvas.getContext('webgl2', { preserveDrawingBuffer: true, antialias: false });
+  if (!gl) { setStatus('WebGL 2 not supported in this browser.'); return false; }
+  ext = gl.getExtension('EXT_color_buffer_float');
+  if (!ext) { setStatus('Float framebuffers not supported.'); return false; }
+
+  bgProgram    = createProgram(VERTEX_SHADER, FRAGMENT_BG_SHADER);
+  vBlurProgram = createProgram(VERTEX_SHADER, FRAGMENT_VBLUR_SHADER);
+  hBlurProgram = createProgram(VERTEX_SHADER, FRAGMENT_HBLUR_SHADER);
+  mainProgram  = createProgram(VERTEX_SHADER, FRAGMENT_MAIN_SHADER);
+
+  const vbo = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+
+  bgVAO    = makeVAO(bgProgram, vbo);
+  vBlurVAO = makeVAO(vBlurProgram, vbo);
+  hBlurVAO = makeVAO(hBlurProgram, vbo);
+  mainVAO  = makeVAO(mainProgram, vbo);
+
+  const w = state.exportWidth, h = state.exportHeight;
+  bgFBO    = createFBO(w, h);
+  vBlurFBO = createFBO(w, h);
+  hBlurFBO = createFBO(w, h);
+
+  canvas.width  = w;
+  canvas.height = h;
+  return true;
+}
+
+function resizeCanvas(w, h) {
+  canvas.width  = w;
+  canvas.height = h;
+  resizeFBO(bgFBO, w, h);
+  resizeFBO(vBlurFBO, w, h);
+  resizeFBO(hBlurFBO, w, h);
+  gl.viewport(0, 0, w, h);
+}
+
+// Cache blur weights between frames
+let cachedBlurRadius = -1;
+let cachedBlurWeights = null;
+
+function render() {
+  if (!gl) return;
+  const w = canvas.width, h = canvas.height;
+  const dpr = 1;
+  const mouseX = state.mouseX;
+  const mouseY = h - state.mouseY; // flip Y for WebGL
+
+  if (cachedBlurRadius !== state.blurRadius) {
+    cachedBlurRadius = state.blurRadius;
+    const k = computeGaussianKernel(state.blurRadius);
+    cachedBlurWeights = new Float32Array(201);
+    k.forEach((v, i) => { cachedBlurWeights[i] = v; });
+  }
+  const blurW = cachedBlurWeights;
+
+  gl.viewport(0, 0, w, h);
+
+  // ── bgPass ──────────────────────────────────────────────────────────────
+  gl.bindFramebuffer(gl.FRAMEBUFFER, bgFBO.fbo);
+  gl.useProgram(bgProgram);
+  gl.bindVertexArray(bgVAO);
+  sf2(bgProgram,'u_resolution',w,h); sf(bgProgram,'u_dpr',dpr);
+  sf2(bgProgram,'u_mouse',mouseX,mouseY);
+  sf2(bgProgram,'u_mouseSpring',mouseX,mouseY);
+  si(bgProgram,'u_bgType',state.bgType);
+  sf(bgProgram,'u_mergeRate',state.mergeRate);
+  sf(bgProgram,'u_shapeWidth',state.shapeWidth);
+  sf(bgProgram,'u_shapeHeight',state.shapeHeight);
+  sf(bgProgram,'u_shapeRadius',state.shapeRadius);
+  sf(bgProgram,'u_shapeRoundness',state.shapeRoundness);
+  sf(bgProgram,'u_shadowExpand',state.shadowExpand);
+  sf(bgProgram,'u_shadowFactor',state.shadowFactor/100);
+  sf2(bgProgram,'u_shadowPosition',-state.shadowX,-state.shadowY);
+  si(bgProgram,'u_showShape1',state.showShape1?1:0);
+  si(bgProgram,'u_bgTextureReady',state.bgTextureReady?1:0);
+  sf(bgProgram,'u_bgTextureRatio',state.bgTextureRatio);
+  if (state.bgTexture) {
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, state.bgTexture);
+    si(bgProgram,'u_bgTexture',0);
+  }
+  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+
+  // ── vBlurPass ────────────────────────────────────────────────────────────
+  gl.bindFramebuffer(gl.FRAMEBUFFER, vBlurFBO.fbo);
+  gl.useProgram(vBlurProgram);
+  gl.bindVertexArray(vBlurVAO);
+  sf2(vBlurProgram,'u_resolution',w,h);
+  si(vBlurProgram,'u_blurRadius',state.blurRadius);
+  sf1v(vBlurProgram,'u_blurWeights',blurW);
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, bgFBO.texture);
+  si(vBlurProgram,'u_prevPassTexture',0);
+  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+
+  // ── hBlurPass ────────────────────────────────────────────────────────────
+  gl.bindFramebuffer(gl.FRAMEBUFFER, hBlurFBO.fbo);
+  gl.useProgram(hBlurProgram);
+  gl.bindVertexArray(hBlurVAO);
+  sf2(hBlurProgram,'u_resolution',w,h);
+  si(hBlurProgram,'u_blurRadius',state.blurRadius);
+  sf1v(hBlurProgram,'u_blurWeights',blurW);
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, vBlurFBO.texture);
+  si(hBlurProgram,'u_prevPassTexture',0);
+  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+
+  // ── mainPass ─────────────────────────────────────────────────────────────
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  gl.useProgram(mainProgram);
+  gl.bindVertexArray(mainVAO);
+  sf2(mainProgram,'u_resolution',w,h); sf(mainProgram,'u_dpr',dpr);
+  sf2(mainProgram,'u_mouse',mouseX,mouseY);
+  sf2(mainProgram,'u_mouseSpring',mouseX,mouseY);
+  sf(mainProgram,'u_mergeRate',state.mergeRate);
+  sf(mainProgram,'u_shapeWidth',state.shapeWidth);
+  sf(mainProgram,'u_shapeHeight',state.shapeHeight);
+  sf(mainProgram,'u_shapeRadius',state.shapeRadius);
+  sf(mainProgram,'u_shapeRoundness',state.shapeRoundness);
+  sf4(mainProgram,'u_tint',state.tintR,state.tintG,state.tintB,state.tintA);
+  sf(mainProgram,'u_refThickness',state.refThickness);
+  sf(mainProgram,'u_refFactor',state.refFactor);
+  sf(mainProgram,'u_refDispersion',state.refDispersion);
+  sf(mainProgram,'u_refFresnelRange',state.refFresnelRange);
+  sf(mainProgram,'u_refFresnelHardness',state.refFresnelHardness/100);
+  sf(mainProgram,'u_refFresnelFactor',state.refFresnelFactor/100);
+  sf(mainProgram,'u_glareRange',state.glareRange);
+  sf(mainProgram,'u_glareHardness',state.glareHardness/100);
+  sf(mainProgram,'u_glareFactor',state.glareFactor/100);
+  sf(mainProgram,'u_glareConvergence',state.glareConvergence/100);
+  sf(mainProgram,'u_glareOppositeFactor',state.glareOppositeFactor/100);
+  sf(mainProgram,'u_glareAngle',(state.glareAngle*Math.PI)/180);
+  si(mainProgram,'u_blurEdge',state.blurEdge?1:0);
+  si(mainProgram,'u_showShape1',state.showShape1?1:0);
+  si(mainProgram,'STEP',9);
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, hBlurFBO.texture);
+  si(mainProgram,'u_blurredBg',0);
+  gl.activeTexture(gl.TEXTURE1);
+  gl.bindTexture(gl.TEXTURE_2D, bgFBO.texture);
+  si(mainProgram,'u_bg',1);
+  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+
+  gl.bindVertexArray(null);
+}
+
+// ─── Render loop ─────────────────────────────────────────────────────────────
+
+let rafId = null;
+function scheduleRender() {
+  if (rafId) return;
+  rafId = requestAnimationFrame(() => {
+    rafId = null;
+    render();
+  });
+}
+
+// ─── Background options ───────────────────────────────────────────────────────
+
+const BG_OPTIONS = [
+  { type: 0, label: '⬛', title: 'Checkerboard' },
+  { type: 1, label: '▦', title: 'Bars' },
+  { type: 2, label: '◐', title: 'Half' },
+  { type: 3, label: '🖼', title: 'Upload image' },
+];
+
+function buildBgOptions() {
+  const wrap = document.getElementById('bgOptions');
+  BG_OPTIONS.forEach(({ type, label, title }) => {
+    const div = document.createElement('div');
+    div.className = 'bg-opt' + (type === state.bgType ? ' active' : '');
+    div.title = title;
+    const inner = document.createElement('div');
+    inner.className = 'bg-opt-inner';
+    inner.textContent = label;
+    div.appendChild(inner);
+    div.addEventListener('click', () => {
+      if (type === 3) {
+        document.getElementById('bgUpload').click();
+        return;
+      }
+      state.bgType = type;
+      state.bgTextureReady = false;
+      wrap.querySelectorAll('.bg-opt').forEach(el => el.classList.remove('active'));
+      div.classList.add('active');
+      scheduleRender();
+    });
+    wrap.appendChild(div);
+  });
+}
+
+document.getElementById('bgUpload').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = () => {
+    if (state.bgTexture) gl.deleteTexture(state.bgTexture);
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+    gl.generateMipmap(gl.TEXTURE_2D);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    state.bgTexture = tex;
+    state.bgTextureRatio = img.naturalWidth / img.naturalHeight;
+    state.bgTextureReady = true;
+    state.bgType = 3;
+    // Mark upload option as active
+    const opts = document.querySelectorAll('.bg-opt');
+    opts.forEach(el => el.classList.remove('active'));
+    opts[3] && opts[3].classList.add('active');
+    URL.revokeObjectURL(url);
+    scheduleRender();
+  };
+  img.src = url;
+  e.target.value = '';
+});
+
+// ─── Controls wiring ──────────────────────────────────────────────────────────
+
+function wire(id, stateKey, transform) {
+  const el = document.getElementById(id);
+  const valEl = document.getElementById(id + 'Val');
+  el.addEventListener('input', () => {
+    const raw = el.type === 'checkbox' ? el.checked : parseFloat(el.value);
+    state[stateKey] = transform ? transform(raw) : raw;
+    if (valEl) valEl.textContent = el.type === 'checkbox' ? '' : parseFloat(el.value).toString();
+    scheduleRender();
+  });
+}
+
+wire('exportWidth',  'exportWidth',  null);
+wire('exportHeight', 'exportHeight', null);
+wire('shapeWidth',   'shapeWidth',   null);
+wire('shapeHeight',  'shapeHeight',  null);
+wire('shapeRadius',  'shapeRadius',  null);
+wire('shapeRoundness','shapeRoundness',null);
+wire('mergeRate',    'mergeRate',    null);
+wire('showShape1',   'showShape1',   null);
+wire('blurRadius',   'blurRadius',   v => Math.round(v));
+wire('blurEdge',     'blurEdge',     null);
+wire('refThickness', 'refThickness', null);
+wire('refFactor',    'refFactor',    null);
+wire('refDispersion','refDispersion',null);
+wire('refFresnelRange','refFresnelRange',null);
+wire('refFresnelHardness','refFresnelHardness',null);
+wire('refFresnelFactor','refFresnelFactor',null);
+wire('glareRange',   'glareRange',   null);
+wire('glareHardness','glareHardness',null);
+wire('glareFactor',  'glareFactor',  null);
+wire('glareConvergence','glareConvergence',null);
+wire('glareOppositeFactor','glareOppositeFactor',null);
+wire('glareAngle',   'glareAngle',   null);
+wire('tintAlpha',    'tintA',        null);
+wire('shadowExpand', 'shadowExpand', null);
+wire('shadowFactor', 'shadowFactor', null);
+wire('shadowX',      'shadowX',      null);
+wire('shadowY',      'shadowY',      null);
+
+// Export size sliders also resize the canvas
+['exportWidth','exportHeight'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => {
+    resizeCanvas(state.exportWidth, state.exportHeight);
+    state.mouseX = state.exportWidth / 2;
+    state.mouseY = state.exportHeight / 2;
+    scheduleRender();
+  });
+});
+
+// Tint color
+document.getElementById('tintColor').addEventListener('input', (e) => {
+  const hex = e.target.value;
+  state.tintR = parseInt(hex.slice(1,3),16)/255;
+  state.tintG = parseInt(hex.slice(3,5),16)/255;
+  state.tintB = parseInt(hex.slice(5,7),16)/255;
+  scheduleRender();
+});
+
+// ─── Canvas mouse interaction ─────────────────────────────────────────────────
+
+canvas.addEventListener('pointermove', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width  / rect.width;
+  const scaleY = canvas.height / rect.height;
+  state.mouseX = (e.clientX - rect.left) * scaleX;
+  state.mouseY = (e.clientY - rect.top)  * scaleY;
+  scheduleRender();
+});
+
+// ─── Status helper ────────────────────────────────────────────────────────────
+
+function setStatus(msg) {
+  document.getElementById('status').textContent = msg;
+}
+
+// ─── Export & Figma messaging ─────────────────────────────────────────────────
+
+async function exportAndSend(insert) {
+  setStatus('Rendering…');
+  const applyBtn  = document.getElementById('applyBtn');
+  const insertBtn = document.getElementById('insertBtn');
+  applyBtn.disabled = true;
+  insertBtn.disabled = true;
+
+  // Render one final frame at export size with shape centered
+  const savedMX = state.mouseX, savedMY = state.mouseY;
+  state.mouseX = canvas.width  / 2;
+  state.mouseY = canvas.height / 2;
+  render();
+  state.mouseX = savedMX;
+  state.mouseY = savedMY;
+
+  try {
+    const blob = await new Promise((resolve, reject) => {
+      canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/png');
+    });
+    const arrayBuffer = await blob.arrayBuffer();
+    const bytes = Array.from(new Uint8Array(arrayBuffer));
+    parent.postMessage({
+      pluginMessage: {
+        type: 'apply-glass',
+        imageData: bytes,
+        width:  state.exportWidth,
+        height: state.exportHeight,
+        insert: !!insert,
+      }
+    }, '*');
+    setStatus('Sent to Figma ✓');
+  } catch (err) {
+    setStatus('Error: ' + err.message);
+  } finally {
+    applyBtn.disabled  = false;
+    insertBtn.disabled = false;
+  }
+}
+
+document.getElementById('applyBtn').addEventListener('click',  () => exportAndSend(false));
+document.getElementById('insertBtn').addEventListener('click', () => exportAndSend(true));
+
+// Messages from plugin sandbox
+window.onmessage = (event) => {
+  const msg = event.data && event.data.pluginMessage;
+  if (!msg) return;
+  if (msg.type === 'applied') setStatus('Applied to Figma layer ✓');
+  if (msg.type === 'error')   setStatus('Error: ' + msg.message);
+};
+
+// ─── Bootstrap ───────────────────────────────────────────────────────────────
+
+buildBgOptions();
+
+if (initGL()) {
+  // Set initial canvas size and center mouse
+  resizeCanvas(state.exportWidth, state.exportHeight);
+  state.mouseX = state.exportWidth  / 2;
+  state.mouseY = state.exportHeight / 2;
+  scheduleRender();
+} else {
+  document.getElementById('applyBtn').disabled  = true;
+  document.getElementById('insertBtn').disabled = true;
+}
+</script>
+</body>
+</html>
