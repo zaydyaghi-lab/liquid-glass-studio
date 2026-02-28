@@ -1,6 +1,7 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { LevaButton } from '../LevaButton/LevaButton';
-import { exportPreset, importPreset } from '../../utils/presetUtils';
+import { copyPresetToClipboard, exportPreset, importPreset } from '../../utils/presetUtils';
+import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
 import styles from './PresetControls.module.scss';
@@ -14,6 +15,17 @@ export interface PresetControlsProps {
 
 export const PresetControls = ({ controls, controlsAPI, lang }: PresetControlsProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await copyPresetToClipboard(controls);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      alert(lang['editor.copyFailedMessage']);
+    }
+  };
 
   const handleExport = () => {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
@@ -53,6 +65,11 @@ export const PresetControls = ({ controls, controlsAPI, lang }: PresetControlsPr
 
   return (
     <div className={styles.presetControls}>
+      <LevaButton onClick={handleCopy} title="Copy current preset to clipboard">
+        <ContentCopyOutlinedIcon style={{ fontSize: '14px', marginRight: '4px' }} />
+        {copied ? lang['editor.copySuccessMessage'] : lang['editor.copy']}
+      </LevaButton>
+
       <LevaButton onClick={handleExport} title="Export current preset">
         <FileDownloadOutlinedIcon style={{ fontSize: '14px', marginRight: '4px' }} />
         {lang['editor.export'] || 'Export'}

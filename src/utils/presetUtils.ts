@@ -28,6 +28,18 @@ export function exportPreset(
   URL.revokeObjectURL(url);
 }
 
+export async function copyPresetToClipboard(
+  controls: ReturnType<typeof useLevaControls>['controls'],
+): Promise<void> {
+  const preset: PresetData = {
+    version: '1.0.0',
+    timestamp: new Date().toISOString(),
+    controls: structuredClone(controls),
+  };
+  const jsonStr = JSON.stringify(preset, null, 2);
+  await navigator.clipboard.writeText(jsonStr);
+}
+
 export function importPreset(file: File): Promise<PresetData> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
