@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { LevaButton } from '../LevaButton/LevaButton';
-import { copyPresetToClipboard, exportPreset, importPreset } from '../../utils/presetUtils';
+import { copyPresetToClipboard, exportPreset, generateCSSCode, importPreset } from '../../utils/presetUtils';
 import CodeOutlinedIcon from '@mui/icons-material/CodeOutlined';
 import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
@@ -17,16 +17,22 @@ export interface PresetControlsProps {
 export const PresetControls = ({ controls, controlsAPI, lang }: PresetControlsProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [copied, setCopied] = useState(false);
-  const [showCode, setShowCode] = useState(false);
+  const [showCode, setShowCode] = useState(true);
+  const [codeTab, setCodeTab] = useState<'css' | 'json'>('css');
 
-  const presetJson = useMemo(() => {
+  const codeContent = useMemo(() => {
     if (!showCode) return '';
+    if (codeTab === 'css') return generateCSSCode(controls);
     return JSON.stringify({ version: '1.0.0', controls }, null, 2);
-  }, [showCode, controls]);
+  }, [showCode, codeTab, controls]);
 
   const handleCopy = async () => {
     try {
-      await copyPresetToClipboard(controls);
+      if (codeTab === 'css' && showCode) {
+        await navigator.clipboard.writeText(codeContent);
+      } else {
+        await copyPresetToClipboard(controls);
+      }
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -103,14 +109,30 @@ export const PresetControls = ({ controls, controlsAPI, lang }: PresetControlsPr
       </div>
 
       {showCode && (
-        <textarea
-          className={styles.codePanel}
-          readOnly
-          value={presetJson}
-          onFocus={(e) => e.currentTarget.select()}
-          onClick={(e) => e.currentTarget.select()}
-          spellCheck={false}
-        />
+        <div className={styles.codeBlock}>
+          <div className={styles.codeTabs}>
+            <button
+              className={`${styles.codeTab} ${codeTab === 'css' ? styles.codeTabActive : ''}`}
+              onClick={() => setCodeTab('css')}
+            >
+              {lang['editor.codeTabCSS']}
+            </button>
+            <button
+              className={`${styles.codeTab} ${codeTab === 'json' ? styles.codeTabActive : ''}`}
+              onClick={() => setCodeTab('json')}
+            >
+              {lang['editor.codeTabJSON']}
+            </button>
+          </div>
+          <textarea
+            className={styles.codePanel}
+            readOnly
+            value={codeContent}
+            onFocus={(e) => e.currentTarget.select()}
+            onClick={(e) => e.currentTarget.select()}
+            spellCheck={false}
+          />
+        </div>
       )}
     </div>
   );
