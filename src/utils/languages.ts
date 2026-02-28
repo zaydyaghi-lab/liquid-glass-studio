@@ -42,6 +42,7 @@ export default {
     'editor.copy': '复制预设',
     'editor.copySuccessMessage': '已复制！',
     'editor.copyFailedMessage': '复制到剪贴板失败',
+    'editor.showCode': '查看代码',
     'editor.importSuccessMessage': '预设导入成功！',
     'editor.importFailedMessage': (message: string) => `导入失败：${message}`,
   },
@@ -88,6 +89,7 @@ export default {
     'editor.copy': 'Copy Preset',
     'editor.copySuccessMessage': 'Copied!',
     'editor.copyFailedMessage': 'Failed to copy to clipboard',
+    'editor.showCode': 'Show Code',
     'editor.importSuccessMessage': 'Preset imported successfully!',
     'editor.importFailedMessage': (message: string) => `Import failed: ${message}`,
   },
@@ -134,6 +136,7 @@ export default {
     "editor.copy": "Presetni nusxalash",
     "editor.copySuccessMessage": "Nusxalandi!",
     "editor.copyFailedMessage": "Buferga nusxalash muvaffaqiyatsiz bo'ldi",
+    "editor.showCode": "Kodni ko'rish",
     "editor.importSuccessMessage": "Preset muvaffaqiyatli import qilindi!",
     "editor.importFailedMessage": (message: string) => `Import failed: ${message}`,
   }
