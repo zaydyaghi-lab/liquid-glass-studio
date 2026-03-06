@@ -3,3 +3,86 @@
   gap: 8px;
   margin-top: 8px;
 }
+
+.cssModalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cssModal {
+  background: #1a2035;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 20px;
+  width: min(600px, 92vw);
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  color: #d4e2ff;
+  font-family: sans-serif;
+}
+
+.cssModalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cssModalTitle {
+  font-size: 14px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.cssModalCloseBtn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  border-radius: 4px;
+  &:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.cssModalDesc {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.cssTextarea {
+  flex: 1;
+  min-height: 300px;
+  background: #0d1526;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: #a8d0ff;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  padding: 12px;
+  resize: vertical;
+  outline: none;
+  &:focus {
+    border-color: rgba(100, 160, 255, 0.4);
+  }
+}
+
+.cssModalFooter {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}

@@ -46,6 +46,7 @@ import PlayCircleOutlinedIcon from '@mui/icons-material/PlayCircleOutlined';
 import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
 import { useLevaControls } from './Controls';
 import { PresetControls } from './components/PresetControls/PresetControls';
+import { HelpGuide } from './components/HelpGuide/HelpGuide';
 
 
 function App() {
@@ -605,6 +606,7 @@ function App() {
           >
             <XIcon></XIcon>
           </a>
+          <HelpGuide lang={lang} />
         </div>
       </header>
       <PresetControls
