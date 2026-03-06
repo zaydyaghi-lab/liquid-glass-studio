@@ -1,8 +1,10 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { LevaButton } from '../LevaButton/LevaButton';
-import { exportPreset, importPreset } from '../../utils/presetUtils';
+import { exportPreset, importPreset, generateCSSForFigma } from '../../utils/presetUtils';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
+import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined';
+import CloseIcon from '@mui/icons-material/Close';
 import styles from './PresetControls.module.scss';
 import { type useLevaControls } from '../../Controls';
 
@@ -14,6 +16,9 @@ export interface PresetControlsProps {
 
 export const PresetControls = ({ controls, controlsAPI, lang }: PresetControlsProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [cssModalOpen, setCssModalOpen] = useState(false);
+  const [cssCode, setCssCode] = useState('');
+  const [copied, setCopied] = useState(false);
 
   const handleExport = () => {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
@@ -51,25 +56,89 @@ export const PresetControls = ({ controls, controlsAPI, lang }: PresetControlsPr
     }
   };
 
+  const handleCopyCSS = () => {
+    const css = generateCSSForFigma(controls);
+    setCssCode(css);
+    setCssModalOpen(true);
+    setCopied(false);
+  };
+
+  const handleCopyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(cssCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard API unavailable — show a message to manually copy the text
+      setCopied(false);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setCssModalOpen(false);
+  };
+
   return (
-    <div className={styles.presetControls}>
-      <LevaButton onClick={handleExport} title="Export current preset">
-        <FileDownloadOutlinedIcon style={{ fontSize: '14px', marginRight: '4px' }} />
-        {lang['editor.export'] || 'Export'}
-      </LevaButton>
+    <>
+      <div className={styles.presetControls}>
+        <LevaButton onClick={handleExport} title="Export current preset">
+          <FileDownloadOutlinedIcon style={{ fontSize: '14px', marginRight: '4px' }} />
+          {lang['editor.export'] || 'Export'}
+        </LevaButton>
 
-      <LevaButton onClick={handleImportClick} title="Import preset from file">
-        <FileUploadOutlinedIcon style={{ fontSize: '14px', marginRight: '4px' }} />
-        {lang['editor.import'] || 'Import'}
-      </LevaButton>
+        <LevaButton onClick={handleImportClick} title="Import preset from file">
+          <FileUploadOutlinedIcon style={{ fontSize: '14px', marginRight: '4px' }} />
+          {lang['editor.import'] || 'Import'}
+        </LevaButton>
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".json"
-        onChange={handleFileChange}
-        style={{ display: 'none' }}
-      />
-    </div>
+        <LevaButton onClick={handleCopyCSS} title={lang['editor.copyCSSTitle'] || 'Copy CSS for Figma'}>
+          <ContentCopyOutlinedIcon style={{ fontSize: '14px', marginRight: '4px' }} />
+          {lang['editor.copyCSS'] || 'Copy CSS'}
+        </LevaButton>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json"
+          onChange={handleFileChange}
+          style={{ display: 'none' }}
+        />
+      </div>
+
+      {cssModalOpen && (
+        <div className={styles.cssModalOverlay} onClick={handleCloseModal}>
+          <div className={styles.cssModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.cssModalHeader}>
+              <span className={styles.cssModalTitle}>
+                {lang['editor.copyCSSModalTitle'] || 'Figma CSS'}
+              </span>
+              <button className={styles.cssModalCloseBtn} onClick={handleCloseModal} title="Close">
+                <CloseIcon style={{ fontSize: '16px' }} />
+              </button>
+            </div>
+            <p className={styles.cssModalDesc}>
+              {lang['editor.copyCSSModalDesc'] || 'Copy the CSS below into Figma via a CSS plugin or use it as a reference.'}
+            </p>
+            <textarea
+              className={styles.cssTextarea}
+              readOnly
+              value={cssCode}
+              spellCheck={false}
+            />
+            <div className={styles.cssModalFooter}>
+              <LevaButton onClick={handleCopyToClipboard} intent={copied ? 'primary' : 'normal'}>
+                <ContentCopyOutlinedIcon style={{ fontSize: '14px', marginRight: '4px' }} />
+                {copied
+                  ? (lang['editor.copyCSSSuccess'] || 'Copied!')
+                  : (lang['editor.copyCSSModalCopy'] || 'Copy')}
+              </LevaButton>
+              <LevaButton onClick={handleCloseModal}>
+                {lang['editor.copyCSSModalClose'] || 'Close'}
+              </LevaButton>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };

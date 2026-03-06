@@ -41,6 +41,13 @@ export default {
     'editor.import': '导入预设',
     'editor.importSuccessMessage': '预设导入成功！',
     'editor.importFailedMessage': (message: string) => `导入失败：${message}`,
+    'editor.copyCSS': '复制 CSS',
+    'editor.copyCSSTitle': '复制 Figma CSS',
+    'editor.copyCSSSuccess': '已复制到剪贴板！',
+    'editor.copyCSSModalTitle': 'Figma CSS 代码',
+    'editor.copyCSSModalDesc': '将以下 CSS 复制到 Figma（通过 CSS to Figma 等插件，或作为参考手动应用）',
+    'editor.copyCSSModalCopy': '复制',
+    'editor.copyCSSModalClose': '关闭',
   },
   ['en-US']: {
     '_settings': {
@@ -84,6 +91,13 @@ export default {
     'editor.import': 'Import Preset',
     'editor.importSuccessMessage': 'Preset imported successfully!',
     'editor.importFailedMessage': (message: string) => `Import failed: ${message}`,
+    'editor.copyCSS': 'Copy CSS',
+    'editor.copyCSSTitle': 'Copy CSS for Figma',
+    'editor.copyCSSSuccess': 'Copied to clipboard!',
+    'editor.copyCSSModalTitle': 'Figma CSS',
+    'editor.copyCSSModalDesc': 'Copy the CSS below into Figma (via a "CSS to Figma" plugin, or apply manually as a reference)',
+    'editor.copyCSSModalCopy': 'Copy',
+    'editor.copyCSSModalClose': 'Close',
   },
   ['uz-UZ']: {
     '_settings': {
@@ -127,5 +141,12 @@ export default {
     "editor.import": "Presetni import qilish",
     "editor.importSuccessMessage": "Preset muvaffaqiyatli import qilindi!",
     "editor.importFailedMessage": (message: string) => `Import failed: ${message}`,
+    "editor.copyCSS": "CSS nusxalash",
+    "editor.copyCSSTitle": "Figma uchun CSS nusxalash",
+    "editor.copyCSSSuccess": "Buferga nusxalandi!",
+    "editor.copyCSSModalTitle": "Figma CSS",
+    "editor.copyCSSModalDesc": "Quyidagi CSS-ni Figma-ga ko'chiring (\"CSS to Figma\" plagini orqali yoki qo'lda qo'llang)",
+    "editor.copyCSSModalCopy": "Nusxalash",
+    "editor.copyCSSModalClose": "Yopish",
   }
 }
